@@ -30,6 +30,7 @@ typedef struct {
 
 Chunk_list allocated_chunks = {0};
 Chunk_list freed_chunks = {0};
+
 void heap_dump(Chunk_list *list){
     for (size_t i = 0 ;i < list->count;i++) {
         printf("chunk(%zu): %p | size: %zu\n",i,list->chunks[i].start,list->chunks[i].size);
@@ -45,7 +46,12 @@ int Chunk_insert(Chunk_list *list,void *ptr,size_t size){
     assert(list->count < CHUNK_LIST_CAP);
     list->chunks[list->count].start = ptr;
     list->chunks[list->count].size = size;
-    list->count++;
+    for (size_t i = list->count;i > 0 && list->chunks[i].start < list->chunks[i-1].start;i--) {
+        const Chunk temp = list->chunks[i];
+        list->chunks[i] = list->chunks[i-1];
+        list->chunks[i-1] = temp;
+    }
+    list->count++;   
 }
 
 void *heap_alloc(size_t size){
